@@ -3,12 +3,11 @@ import puppeteer from "puppeteer-core";
 
 export default async function handler(req, res) {
 
-  // 🔥 HEADERS CORS
+  // 🔥 CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // ✅ Preflight
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
@@ -23,10 +22,17 @@ export default async function handler(req, res) {
   }
 
   let browser;
+
   try {
     browser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath(),
+      args: [
+        ...chromium.args,
+        "--disable-dev-shm-usage",
+        "--no-sandbox",
+        "--disable-setuid-sandbox"
+      ],
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(), // 🔥 CRUCIAL
       headless: chromium.headless,
     });
 
@@ -41,16 +47,11 @@ export default async function handler(req, res) {
     await browser.close();
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      'attachment; filename="test.pdf"'
-    );
-
     return res.status(200).send(pdfBuffer);
 
   } catch (err) {
     if (browser) await browser.close();
-    console.error(err);
+    console.error("PDF ERROR:", err);
     return res.status(500).json({ error: err.message });
   }
 }
