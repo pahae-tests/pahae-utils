@@ -1,4 +1,5 @@
-import puppeteer from "puppeteer";
+import chromium from "@sparticuz/chromium";
+import puppeteer from "puppeteer-core";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -6,7 +7,6 @@ export default async function handler(req, res) {
   }
 
   const { html } = req.body;
-
   if (!html) {
     return res.status(400).json({ error: "HTML manquant" });
   }
@@ -14,8 +14,9 @@ export default async function handler(req, res) {
   let browser;
   try {
     browser = await puppeteer.launch({
-      headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
     });
 
     const page = await browser.newPage();
@@ -30,10 +31,11 @@ export default async function handler(req, res) {
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", 'attachment; filename="document.pdf"');
-    res.setHeader("Content-Length", pdfBuffer.length);
-    res.end(pdfBuffer);
+    res.status(200).send(pdfBuffer);
+
   } catch (err) {
     if (browser) await browser.close();
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 }
