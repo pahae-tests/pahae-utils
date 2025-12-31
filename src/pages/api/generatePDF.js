@@ -1,57 +1,29 @@
-import chromium from "@sparticuz/chromium";
-import puppeteer from "puppeteer-core";
+import fetch from "node-fetch";
 
 export default async function handler(req, res) {
-
-  // 🔥 CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  if (req.method !== "POST") return res.status(405).end();
 
   const { html } = req.body;
-  if (!html) {
-    return res.status(400).json({ error: "HTML manquant" });
-  }
-
-  let browser;
+  if (!html) return res.status(400).json({ error: "HTML manquant" });
 
   try {
-    browser = await puppeteer.launch({
-      args: [
-        ...chromium.args,
-        "--disable-dev-shm-usage",
-        "--no-sandbox",
-        "--disable-setuid-sandbox"
-      ],
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(), // 🔥 CRUCIAL
-      headless: chromium.headless,
+    const response = await fetch("https://api.pdfshift.io/v3/convert", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.PDFSHIFT_KEY}`
+      },
+      body: JSON.stringify({ source: html })
     });
 
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
-
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      printBackground: true,
-    });
-
-    await browser.close();
+    const pdfBuffer = await response.arrayBuffer();
 
     res.setHeader("Content-Type", "application/pdf");
-    return res.status(200).send(pdfBuffer);
+    res.setHeader("Content-Disposition", 'attachment; filename="rapport.pdf"');
+    res.send(Buffer.from(pdfBuffer));
 
   } catch (err) {
-    if (browser) await browser.close();
-    console.error("PDF ERROR:", err);
-    return res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: err.message });
   }
 }
