@@ -14,8 +14,8 @@
     "next": "15.3.8",
     "nodemailer": "^7.0.0",
     "postcss": "^8.5.3",
-    "puppeteer-core": "^22.0.0",
-    "@sparticuz/chromium": "^123.0.0",
+    "puppeteer-core": "22.6.4",
+    "@sparticuz/chromium": "123.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwindcss": "^4.1.4"
@@ -26,5 +26,6 @@
     "eslint-config-next": "15.3.1"
   }
 }
+
 
 
