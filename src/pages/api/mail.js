@@ -1,6 +1,10 @@
 import nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    
     const { email, subject, text, html } = req.query;
     if (!email || !text || !subject || !html) return res.status(400).json({ message: 'Infos Manquantes' });
 
