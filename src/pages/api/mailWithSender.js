@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     if (!email || !text || !subject || !html || !brevoSmtp || !brevoUser || !brevoApi || !brevoSender ) return res.status(400).json({ message: 'Infos Manquantes' });
 
     const transporter = nodemailer.createTransport({
-        host: brevoSender,
+        host: brevoSmtp,
         port: 587,
         auth: {
             user: brevoUser,
